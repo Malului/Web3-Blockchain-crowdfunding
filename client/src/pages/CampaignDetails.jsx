@@ -150,9 +150,6 @@ const CampaignDetails = () => {
               value={remainingDays} 
           />
           <CountBox 
-              //title={`Raised of ${ethers.formatEther(state.goal)} ETH`} 
-              //value={ethers.formatEther(state.amountContributed)}
-
               title={`Raised of ${state.goal} ETH`}
               value={state.amountContributed}
           />

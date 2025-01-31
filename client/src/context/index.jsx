@@ -201,7 +201,7 @@ export const FundingProvider = ({ children }) => {
         try {
             donationsContract = await fundingEthereumContract();
 
-            const [donators, amounts] = await contract.getDonatorDetails(pId);
+            const [donators, amounts] = await donationsContract.getDonatorDetails(pId);
             
             return donators.map((donator, i) => ({
                 donator,
