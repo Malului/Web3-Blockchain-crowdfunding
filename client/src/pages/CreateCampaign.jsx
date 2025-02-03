@@ -67,7 +67,7 @@ const handleFormFieldChange = (fieldName, e) => {
         }
       } else {
         alert("Enter a valid image URL");
-        setForm({ ...form, image:''});
+        setForm(prev => ({ ...prev, imageUrl: ''}));
       }
     });
     
