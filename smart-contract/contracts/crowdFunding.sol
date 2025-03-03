@@ -108,7 +108,9 @@ contract crowdFunding{
         campaign.claimed = true;
         campaign.ended = true;
 
-        payable(campaign.owner).transfer(campaign.amountContributed);
+        
+        (bool sent, ) = payable(campaign.owner).call{value: campaign.amountContributed}("");
+        require(sent, "ETH transfer failed");
 
         emit FundsClaimed(_campaignId, campaign.owner, campaign.amountContributed);
     }
@@ -119,14 +121,22 @@ contract crowdFunding{
 
         Campaign storage campaign = Campaigns[_campaignId];
 
-        require(!campaign.ended, "Funds already claimed");
+        require(!campaign.claimed, "Funds already claimed");
         require(campaign.goal > campaign.amountContributed, "Goal amount reached");
 
         uint256 contributionAmount = campaign.contributions[msg.sender];
-        require(contributionAmount > 0, "No contributio found");
+        require(contributionAmount > 0, "No contribution found");
 
         campaign.contributions[msg.sender] = 0;
-        payable(msg.sender).transfer(contributionAmount);
+        campaign.amountContributed -= contributionAmount;
+
+        if (campaign.amountContributed == 0) {
+            campaign.claimed = true;
+            campaign.ended = true;
+        }
+
+        (bool success, ) = payable(msg.sender).call{value: contributionAmount}("");
+        require(success, "Error: Transfer failed");
 
         emit FundsRefunded(_campaignId, msg.sender, contributionAmount);
     }
@@ -181,18 +191,3 @@ contract crowdFunding{
         return (donatorList, amountList);
     }
 }
-
-
-//   function getDonators(uint256 _campaignId) public view 
-//         campaignExists(_campaignId) 
-//         returns (address[] memory) {
-
-//         return Campaigns[_campaignId].donors;
-//     }
-
-//     function getContribution(uint256 _campaignId, address _contributor) public view 
-//         campaignExists(_campaignId) 
-//         returns (uint256) {
-
-//         return Campaigns[_campaignId].contributions[_contributor];
-//     }

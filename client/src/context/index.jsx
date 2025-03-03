@@ -39,7 +39,7 @@ export const FundingProvider = ({ children }) => {
             setCurrentAccount(accounts[0]);
 
 
-            console.log(accounts);
+            console.log("Connected accounts", accounts);
             return accounts[0];
             
         } catch (error) {
@@ -190,7 +190,7 @@ export const FundingProvider = ({ children }) => {
             throw error;
         } finally {
             setIsTransactionPending(false);
-            fundContract - null;
+            fundContract = null;
         }
     }
 
@@ -219,9 +219,13 @@ export const FundingProvider = ({ children }) => {
         setIsTransactionPending(true);
         try {
             const contract = await fundingEthereumContract();
-            const tx = await contract.claimFund(pId);
-            await tx.wait();
-            return tx;
+            const tx = await contract.claimFund(pId, {
+                gasLimit: 300000
+            });
+
+            const receipt = await tx.wait();
+
+            return  receipt;  
         } catch (error) {
             console.error("Claiming funds failed:", error);
             throw error;
@@ -234,9 +238,11 @@ export const FundingProvider = ({ children }) => {
         setIsTransactionPending(true);
         try {
             const contract = await fundingEthereumContract();
-            const tx = await contract.getRefund(pId);
-            await tx.wait();
-            return tx;
+            const tx = await contract.getRefund(pId, {
+                gasLimit: 300000
+            });
+            const receipt = await tx.wait();
+            return receipt;
         } catch (error) {
             console.error("Refund failed:", error);
             throw error;

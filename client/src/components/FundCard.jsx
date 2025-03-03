@@ -10,7 +10,8 @@ const FundCard = ({
     amountContributed, 
     deadline, 
     imageUrl, 
-    goal, 
+    goal,
+    ended,
     handleClick
 }) => {
 
@@ -61,24 +62,30 @@ const FundCard = ({
                     </p>
                 </div>
 
-                {remainingDays <= 0 && (
-                    <p className='font-epilogue font-normal text-[12px] leading-[18px] text-[#de6060] sm:max-w-[120px] truncate'>
-                        Deadline <br /> 
-                        Reached
+                {ended ? (
+                    <p className='font-epilogue font-normal text-[12px] leading-[18px] text-[#4acd8d] sm:max-w-[120px] truncate'>
+                        Campaign <br /> 
+                        Ended
                     </p>
+                ) : (
+                    remainingDays <= 0 ? (
+                        <p className='font-epilogue font-normal text-[12px] leading-[18px] text-[#de6060] sm:max-w-[120px] truncate'>
+                            Deadline <br /> 
+                            Reached
+                        </p>
+                    ) : (
+                        <div className='flex flex-col'>
+                            <h4 className='font-epilogue font-semibold text-[14px] text-[#b2b3bd] leading-[22px]'>
+                                {remainingDays}
+                            </h4>
+
+                            <p className='mt-[3px] font-epilogue font-normal text-[12px] leading-[18px] text-[#808191] sm:max-w-[120px] truncate'>
+                                Days Left
+                            </p>
+                        </div>
+                    )
                 )}
 
-                {remainingDays > 0 && (
-                    <div className='flex flex-col'>
-                        <h4 className='font-epilogue font-semibold text-[14px] text-[#b2b3bd] leading-[22px]'>
-                            {remainingDays}
-                        </h4>
-
-                        <p className='mt-[3px] font-epilogue font-normal text-[12px] leading-[18px] text-[#808191] sm:max-w-[120px] truncate'>
-                            Days Left
-                        </p>
-                    </div>
-                    )}
                 
             </div>
 

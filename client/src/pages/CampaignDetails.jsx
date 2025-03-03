@@ -73,10 +73,10 @@ const CampaignDetails = () => {
 
       const result = await donate(state.pId, amount);
 
-      if(!isTransactionPending) {
-        console.log("Fund send successfully", result);
-        navigate('/');
-      }
+      await fetchDonators();
+      
+      console.log("Fund send successfully", result);
+      navigate('/');
     } catch (error) {
       console.log(error);
       throw error;
@@ -88,10 +88,14 @@ const CampaignDetails = () => {
   const handleClaim = async () => {
     setIsLoading(true);
     try {
-      await claimFunds(state.pId);
+      await claimFunds(state.pId, {
+        gasLimit: 300000
+      });
+      await fetchDonators();
       navigate('/');
     } catch (error) {
       console.log("Claim failed", error);
+      alert(`Claim failed: ${error.reason}`);
     } finally {
       setIsLoading(false);
     }
@@ -100,11 +104,14 @@ const CampaignDetails = () => {
   const handleRefund = async () => {
     setIsLoading(true);
     try {
-      await refundDonation(state.pId);
+      await refundDonation(state.pId, {
+        gasLimit: 300000
+      });
       await fetchDonators();
       navigate('/');
     } catch (error) {
       console.log("Refund failed", error);
+      alert(`Refund failed: ${error.reason}`);
     } finally {
       setIsLoading(false);
     }
@@ -147,7 +154,7 @@ const CampaignDetails = () => {
         <div className="flex md:w-[150px] w-full flex-wrap justify-between gap-[30px]">
           <CountBox 
               title="Days Left" 
-              value={remainingDays} 
+              value={remainingDays <= 0 ? 'Ended' : remainingDays} 
           />
           <CountBox 
               title={`Raised of ${state.goal} ETH`}
@@ -183,19 +190,11 @@ const CampaignDetails = () => {
                   {state.owner}
                 </h4>
 
-                <p className="mt-[4px] font-epilogue font-normal text-[12px] text-[#808191]">
-                  {state.claimed ? 'Funds claimed' : 'Active campaign'}
+                <p className={`mt-[4px] font-epilogue font-normal text-[14px] ${state.ended ? 'text-[#4acd8d]' : 'text-[#808191]'}`}>
+                  {state.ended ? 'Campaign ended' : 'Active campaign'}
                 </p>
               </div>
 
-              {canClaim && (
-                 <CustomButton
-                 btnType="button"
-                 title={isTransactionPending ? "Claiming..." : "Claim Funds"}
-                 styles="ml-4 bg-[#4acd8d]"
-                 handleClick={handleClaim}
-               />
-             )}
 
             </div>
           </div>
@@ -245,6 +244,95 @@ const CampaignDetails = () => {
           </div>
         </div>
 
+        {/* Trial */}
+        {remainingDays <= 0 ? (
+          <div className="flex-1">
+            <div className="mt-6 border-t border-[#3a3a43] pt-6">
+              <h4 className="font-epilogue font-semibold text-[16px] text-white mb-4">
+                {canClaim && `Your total claim funds : ${state.amountContributed} ETH`}
+                {canRefund && `Your total refund contribution : ${userContribution} ETH`}
+                {!canClaim && !canRefund && 'Thank you for your contributions'}
+              </h4>
+
+              {!canClaim && !canRefund ? (
+                <CustomButton
+                  btnType="button"
+                  title="Campaign Ended"
+                  styles="w-full bg-[#4acd8d]"
+                />
+              ) : (
+                 <CustomButton 
+                btnType="button"
+                title={isTransactionPending ? (canClaim ? 'Claiming...' : 'Refunding...') : (canClaim ? 'Claim Funds' : 'Request Refund')}
+                styles={`w-full ${canClaim ? "bg-[#8c6dfd] hover:bg-[#a08aff]" : "bg-[#f84550] hover:bg-[#d93a45]"}`}
+                handleClick={canClaim ? handleClaim : handleRefund}
+              />    
+              )}
+
+             
+              <p className="mt-2 text-[#808191] text-sm">
+                {canRefund && `You can refund your contribution as the campaign didn't reach its goal`}
+                {canClaim && `You can claim your funds as the campaign reached its goal`}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex-1">
+            <h4 className="font-epilogue font-semibold text-[18px] text-white uppercase">
+              Fund
+            </h4>   
+
+            <div className="mt-[20px] flex flex-col p-4 bg-[#1c1c24] rounded-[10px]">
+
+              <p className="font-epilogue fount-medium text-[20px] leading-[30px] text-center text-[#808191]">
+                Fund the campaign
+              </p>
+
+              <div className="mt-[30px]">
+                <input 
+                  type="number"
+                  placeholder="ETH 0.1"
+                  step="0.01"
+                  className="w-full py-[10px] sm:px-[20px] px-[15px] outline-none border-[1px] border-[#3a3a43] bg-transparent font-epilogue text-white text-[18px] leading-[30px] placeholder:text-[#4b5264] rounded-[10px]"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                />
+
+                <div className="my-[20px] p-4 bg-[#13131a] rounded-[10px]">
+
+                  <h4 className="font-epilogue font-semibold text-[14px] leading-[22px] text-white">
+                    Back it because you believe in it.
+                  </h4>
+
+                  <p className="mt-[20px] font-epilogue font-normal leading-[22px] text-[#808191]">
+                    Support the project for no reward, just because it speaks to you.
+                  </p>
+
+                </div>
+
+                <CustomButton 
+                  btnType="button"
+                  title={currentAccount ? "Fund Campaign" : "Connect Wallet"}
+                  styles="w-full bg-[#8c6dfd] hover:bg-[#a08aff]"
+                  handleClick={currentAccount ? handleDonate : connectWallet}
+                />
+            </div>
+            </div>
+          </div>
+        )}
+
+        {/* 
+        
+            {canClaim && (
+                 <CustomButton
+                 btnType="button"
+                 title={isTransactionPending ? "Claiming..." : "Claim Funds"}
+                 styles="ml-4 bg-[#4acd8d]"
+                 handleClick={handleClaim}
+               />
+             )}
+
+        
         <div className="flex-1">
           <h4 className="font-epilogue font-semibold text-[18px] text-white uppercase">
             Fund
@@ -304,7 +392,7 @@ const CampaignDetails = () => {
 
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   )
